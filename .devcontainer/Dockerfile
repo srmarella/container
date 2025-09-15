@@ -189,6 +189,9 @@ RUN set -eux \
     && chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.bashrc
 # Non-root dev user ready.
 
+# Ensure HOME is set for the container user so ${containerEnv:HOME} resolves in devcontainer.json
+ENV HOME=/home/${USERNAME}
+
 USER ${USERNAME}
 
 SHELL ["/bin/bash", "-c"]

@@ -56,12 +56,25 @@
         // 3. VS Code resolves ${containerEnv:PYTHON_ENV} to the actual value from the container's environment
         // 4. Final path becomes: /opt/my_python_dev/bin/python3
         // To change: update only the ARG PYTHON_ENV value in Dockerfile and rebuild container
-        "python.defaultInterpreterPath": "/opt/${containerEnv:PYTHON_ENV}/bin/python3"
-      },
-      "extensions": [
-        "snowflake.snowflake-vsc"
-      ]
-    }
+        "python.defaultInterpreterPath": "/opt/${containerEnv:PYTHON_ENV}/bin/python3",
+
+        // --- SNOWFLAKE EXTENSION SETUP ---
+        // The following ensures the Snowflake VS Code extension is installed and configured for remote containers:
+        // 1. The extension is listed in "extensions" below, so it will be auto-installed in the container.
+        // 2. The connection path is set to ~/.snowflake/connections.toml (copied or mounted by postCreate.sh logic).
+        // 3. If the extension does not appear:
+        //    - Open a .sql file or the Snowflake sidebar to trigger activation.
+        //    - Check the Extensions sidebar (should show "Snowflake" as enabled in the container).
+        //    - If missing, rebuild the container or install manually from the Extensions view.
+        //    - Check the Output panel for errors under "Snowflake" or "Extensions".
+        //    - Confirm that ~/.snowflake/connections.toml exists and is readable.
+        // 4. The extension will use the config at the path below:
+        "snowflake.connectionsConfigFile": "${containerEnv:HOME}/.snowflake/connections.toml"
+          },
+          "extensions": [
+            "snowflake.snowflake-vsc"
+          ]
+      }
   },
 
 
@@ -73,6 +86,44 @@
   // ---------------------------------------------------------------------------
   // updateContentCommand removed earlier (now documented in README). Keeping only needed lifecycle hooks.
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Mounts: Optional host dotfiles (Snowflake config, SSH keys, Git config)
+  //
+  // How localEnv works:
+  // - ${localEnv:VARIABLE} reads environment variables from your HOST system (not container)
+  // - Resolves at container creation time to actual paths
+  // - Cross-platform: different variables exist on different operating systems
+  //
+  // Windows host: ${localEnv:USERPROFILE} = "C:\Users\srikanth.marella"
+  // macOS host:   ${localEnv:HOME} = "/Users/srikanth"
+  // Linux host:   ${localEnv:HOME} = "/home/srikanth"
+  //
+  // Strategy: Combine ${localEnv:HOME} and ${localEnv:USERPROFILE} so whichever exists becomes the prefix
+  // Result: Host directories appear inside the container at /host-snowflake, /root/.ssh, and /root/.gitconfig
+  // ---------------------------------------------------------------------------
+  "mounts": [
+    // Mount Snowflake config (macOS / Linux)
+    "source=${localEnv:HOME}/.snowflake,target=/host-snowflake,type=bind,consistency=cached",
+    // Mount Snowflake config (Windows)
+    "source=${localEnv:USERPROFILE}\\.snowflake,target=/host-snowflake,type=bind,consistency=cached",
+
+    // Mount SSH keys (macOS / Linux)
+    // NOTE: Using an absolute path (/home/vscode) instead of ${containerEnv:HOME} because
+    // Docker requires the *target* path to already be a valid absolute path string at
+    // invocation time. The variable substitution for ${containerEnv:HOME} happens in the
+    // Dev Containers tooling layer, but in this scenario it's being passed through to
+    // 'docker run' unchanged causing: "invalid mount path: '${containerEnv:HOME}/.ssh'".
+    // Since the Dockerfile sets USER vscode and its home is /home/vscode, we hardcode it.
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+    // Mount SSH keys (Windows)
+    "source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+
+    // Mount Git config (macOS / Linux)
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    // Mount Git config (Windows)
+    "source=${localEnv:USERPROFILE}\\.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
+  ],
+
   "postCreateCommand": "/bin/bash .devcontainer/scripts/postCreate.sh",
   "postStartCommand": "/bin/bash -c 'echo \"[devcontainer] Started at $(date)\"'",
   "postAttachCommand": "/bin/bash -c 'echo \"[devcontainer] Attached. Python: $(python --version)\"'",
@@ -82,6 +133,12 @@
   // * Rebuild container after editing Dockerfile or features: Command Palette > Dev Containers: Rebuild.
   // * Secrets: never commit; use VS Code Secret Storage or provider-specific secret managers.
   // * Add dockerComposeFile if you need multiple services (db, cache, etc.).
+  //
+  // localWorkspaceFolderBasename explanation:
+  // - This is another localEnv variable that gets the workspace folder name
+  // - Example: if workspace is "C:\marella\personal-repo\github\container"
+  // - Then ${localWorkspaceFolderBasename} = "container"
+  // - Result: workspaceFolder becomes "/workspaces/container" in container
   // ---------------------------------------------------------------------------
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
 }

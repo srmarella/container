@@ -1,0 +1,4 @@
+{
+  "python.defaultInterpreterPath": "/opt/my_python_dev/bin/python3",
+  "snowflake.connectionPath": "/root/.snowflake"
+}

@@ -108,6 +108,7 @@
     "source=${localEnv:USERPROFILE}\\.snowflake,target=/host-snowflake,type=bind,consistency=cached",
 
     // Mount SSH keys (macOS / Linux)
+    // SSH: Host ~/.ssh is bind-mounted here so the container transparently uses your existing keys; verify with: ssh -T git@github.com
     // NOTE: Using an absolute path (/home/vscode) instead of ${containerEnv:HOME} because
     // Docker requires the *target* path to already be a valid absolute path string at
     // invocation time. The variable substitution for ${containerEnv:HOME} happens in the
@@ -117,6 +118,12 @@
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
     // Mount SSH keys (Windows)
     "source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+  // SSH Troubleshooting (passphrase, agent reuse):
+  // 1. If you keep being asked for your passphrase: start an agent inside container: eval "$(ssh-agent -s)" && ssh-add ~/.ssh/id_rsa
+  // 2. If multiple keys cause auth failures: we add an IdentitiesOnly block for github.com in postCreate (see ~/.ssh/config)
+  // 3. To pin a specific key: uncomment IdentityFile line in that block.
+  // 4. To verify which key was used: ssh -vvvT git@github.com | grep 'Offering public key'
+  // 5. If permissions warning appears for mounted keys (Windows metadata): copy the key locally and chmod 600 it.
 
     // Mount Git config (macOS / Linux)
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",

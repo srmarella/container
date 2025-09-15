@@ -134,4 +134,35 @@ if [ "$SNOWFLAKE_CONFIGURED" = true ]; then
   fi
 fi
 
+# ---------------------------------------------------------------------------
+# SSH configuration hardening / convenience
+# We append (idempotently) a Host github.com block that:
+#  - Forces using only the keys present (avoids offering every default key)
+#  - Uses the default IdentityFile(s) already in the mounted ~/.ssh unless overridden
+#  - Sets IdentitiesOnly yes to prevent SSH from trying agent/extra keys that trigger prompts
+#  - You can extend this with per-org shortcuts later (e.g., Host github-work)
+SSH_CONFIG="$HOME/.ssh/config"
+if [ -d "$HOME/.ssh" ]; then
+  mkdir -p "$(dirname "$SSH_CONFIG")"
+  # Only add once: look for a marker comment
+  if ! grep -q "# devcontainer-github-host-block" "$SSH_CONFIG" 2>/dev/null; then
+    echo "[postCreate] Adding GitHub SSH config block (IdentitiesOnly)";
+    {
+      echo "# devcontainer-github-host-block"
+      echo "Host github.com"
+      echo "  HostName github.com"
+      echo "  User git"
+      echo "  IdentitiesOnly yes"
+      echo "  # Uncomment to pin a specific key if you add multiple keys later:"
+      echo "  # IdentityFile ~/.ssh/id_rsa"
+      echo ""
+    } >> "$SSH_CONFIG"
+    chmod 600 "$SSH_CONFIG" || true
+  else
+    echo "[postCreate] GitHub SSH config block already present"
+  fi
+fi
+
+# Tip for users: run 'ssh -T github.com' (or git@github.com) to confirm it still works.
+
 echo "[postCreate] Complete."

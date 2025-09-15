@@ -1,0 +1,10 @@
+[
+    // Workspace-specific keybindings (this file uses an array of keybinding objects)
+    {
+        // The key chord (platform-specific overrides allowed separately)
+        "key": "ctrl+alt+t",
+
+        // VS Code command to invoke: open a new terminal
+        "command": "workbench.action.terminal.new"
+    }
+]

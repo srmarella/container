@@ -1,0 +1,37 @@
+// Workspace extension recommendations (JSONC allows comments)
+{
+    // "recommendations": array lists extension IDs that VS Code will prompt contributors to install
+    "recommendations": [
+        // vscode-icons-team.vscode-icons
+        // Purpose: File icons (UI only). Recommended to install locally for a nicer explorer view.
+        // Where: Host/editor only (not needed in container).
+        "vscode-icons-team.vscode-icons",
+
+        // ms-vscode-remote.remote-wsl
+        // Purpose: WSL Remote — lets VS Code connect to WSL instances.
+        // Where: Host only (do NOT install inside the dev container).
+        "ms-vscode-remote.remote-wsl",
+
+        // snowflake.snowflake-vsc
+        // Purpose: Snowflake tooling (SQL editor, etc.). If this extension uses a language server
+        // that must run in the container, add it to devcontainer.json as well; otherwise this
+        // recommendation is sufficient.
+        // Where: Recommend locally; optionally also in container if server-side required.
+        "snowflake.snowflake-vsc",
+
+        // Purpose: Dev Containers Remote — lets VS Code open folders inside Docker containers
+        // Where: Install on host (editor) and optionally in the container if the extension requires server-side components.
+        "ms-vscode-remote.remote-containers",
+
+        // ms-azuretools.vscode-docker
+        // Purpose: Docker support — Dockerfile autoruns, Compose awareness, Docker Explorer.
+        // Where: Useful on host; can also be installed in container but often only needed on host.
+        "ms-azuretools.vscode-docker",
+
+        // openai.chatgpt
+        // Purpose: ChatGPT integration for code assistance and chat. Host/editor feature.
+        // Where: Host/editor only.
+        "openai.chatgpt",
+        "ms-python.python"
+    ]
+}

@@ -1,0 +1,56 @@
+# Pre-commit configuration
+# This file defines code quality checks that run automatically before each git commit
+# Install with: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Black: Python code formatter
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  # isort: Import statement sorter
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]  # Compatible with black formatting
+
+  # Built-in hooks for common issues
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace      # Remove trailing whitespace
+      - id: end-of-file-fixer       # Ensure files end with newline
+      - id: check-yaml              # Validate YAML files
+      - id: check-json              # Validate JSON files (excludes JSONC)
+        exclude: '(devcontainer\.json|extensions\.json|keybindings\.json)$'
+      - id: check-merge-conflict    # Check for merge conflict markers
+      - id: check-added-large-files # Prevent large files from being committed
+      - id: mixed-line-ending       # Ensure consistent line endings
+
+# Optional: Additional hooks (uncomment as needed)
+#
+# # Flake8: Python linting
+# - repo: https://github.com/pycqa/flake8
+#   rev: 7.1.1
+#   hooks:
+#     - id: flake8
+#       args: [--max-line-length=88, --extend-ignore=E203,W503]
+#
+# # MyPy: Static type checking
+# - repo: https://github.com/pre-commit/mirrors-mypy
+#   rev: v1.11.2
+#   hooks:
+#     - id: mypy
+#       additional_dependencies: [types-requests]
+#
+# # Bandit: Security linting
+# - repo: https://github.com/pycqa/bandit
+#   rev: 1.7.10
+#   hooks:
+#     - id: bandit
+#       args: [-r, .]
+#       exclude: ^tests/

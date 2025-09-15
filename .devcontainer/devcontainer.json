@@ -1,0 +1,87 @@
+// devcontainer.json (JSONC)
+// This file is intentionally verbose to serve as living documentation for daily Python development.
+{
+  // ---------------------------------------------------------------------------
+  // Human-friendly label shown in: VS Code window title, Remote Explorer list, command palette container pickers,
+  // Codespaces dashboard (if used), and devcontainer CLI listings (does NOT set Docker containerName unless you add that separately).
+  // ---------------------------------------------------------------------------
+  "name": "python-daily-dev",
+  // NOTE: The Dev Containers spec does not currently support a top-level "containerName" property.
+  // To have a stable Docker container name, inject it via runArgs (see runArgs section below where we add --name).
+
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".." // Use workspace root as Docker build context so Dockerfile can COPY requirements.txt
+    // All tunable build arguments (PYTHON_VERSION, PYTHON_ENV, PYTHON_SHA256, etc.) are now
+    // centralized in the Dockerfile with sensible defaults. Override them at build time via:
+    //   devcontainer build --build-arg PYTHON_ENV=alt_env --build-arg PYTHON_VERSION=3.x.y
+    // Keeping args out of this file avoids duplication and drift.
+  },
+
+  // ---------------------------------------------------------------------------
+  // Features: add reusable components (git, GitHub CLI, Node for tooling, etc.)
+  // Will work best when base image is a devcontainers image (our Dockerfile uses one now).
+  // Docs: https://github.com/devcontainers/features
+  // ---------------------------------------------------------------------------
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  // ---------------------------------------------------------------------------
+  // User: How VS Code determines which user to run as in the container:
+  // 1. VS Code checks devcontainer.json for "remoteUser" property (we don't set this)
+  // 2. If not found, VS Code uses the container's default user (set by Dockerfile's USER directive)
+  // 3. Our Dockerfile ends with: USER vscode
+  // 4. Therefore, VS Code server runs as the 'vscode' user automatically
+  //
+  // This approach avoids duplication - the user is defined once in Dockerfile.
+  // If you need to temporarily run VS Code server as root (e.g., for diagnosing
+  // permission issues), you can reintroduce: "remoteUser": "root"
+  // Or override by adding a devcontainer feature that switches users post-build.
+  // ---------------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------------
+  // VS Code specific customizations: settings + extensions.
+  // You can alternatively use top-level "extensions": [...] but this nested form
+  // supports other IDEs implementing the spec without inheriting VS Code specifics.
+  // ---------------------------------------------------------------------------
+  "customizations": {
+    "vscode": {
+      "settings": {
+        // Set Python interpreter dynamically based on PYTHON_ENV environment variable.
+        // How it works:
+        // 1. Dockerfile defines: ARG PYTHON_ENV=my_python_dev (build-time variable)
+        // 2. Dockerfile sets: ENV PYTHON_ENV=${PYTHON_ENV} (runtime environment variable)
+        // 3. VS Code resolves ${containerEnv:PYTHON_ENV} to the actual value from the container's environment
+        // 4. Final path becomes: /opt/my_python_dev/bin/python3
+        // To change: update only the ARG PYTHON_ENV value in Dockerfile and rebuild container
+        "python.defaultInterpreterPath": "/opt/${containerEnv:PYTHON_ENV}/bin/python3"
+      },
+      "extensions": [
+        "snowflake.snowflake-vsc"
+      ]
+    }
+  },
+
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle commands:
+  // postCreateCommand: runs once when container is first created.
+  // postStartCommand: runs each start (keep fast)
+  // postAttachCommand: runs when VS Code attaches.
+  // ---------------------------------------------------------------------------
+  // updateContentCommand removed earlier (now documented in README). Keeping only needed lifecycle hooks.
+  // ---------------------------------------------------------------------------
+  "postCreateCommand": "/bin/bash .devcontainer/scripts/postCreate.sh",
+  "postStartCommand": "/bin/bash -c 'echo \"[devcontainer] Started at $(date)\"'",
+  "postAttachCommand": "/bin/bash -c 'echo \"[devcontainer] Attached. Python: $(python --version)\"'",
+
+  // ---------------------------------------------------------------------------
+  // Additional notes:
+  // * Rebuild container after editing Dockerfile or features: Command Palette > Dev Containers: Rebuild.
+  // * Secrets: never commit; use VS Code Secret Storage or provider-specific secret managers.
+  // * Add dockerComposeFile if you need multiple services (db, cache, etc.).
+  // ---------------------------------------------------------------------------
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}

@@ -32,9 +32,6 @@ env.bak/
 venv.bak/
 
 # IDEs
-.vscode/settings.json
-.vscode/launch.json
-.vscode/tasks.json
 .vscode/*.code-workspace
 .idea/
 *.swp
@@ -70,3 +67,8 @@ coverage.xml
 # Logs
 *.log
 logs/
+
+# Snowflake configuration
+# connections.toml = copied from host (user-specific, never commit)
+# .snowflake/ folder = can be project-specific (decide per project)
+# connections.toml
